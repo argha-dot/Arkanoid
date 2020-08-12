@@ -42,7 +42,7 @@ player_img = load_img(("player.png"))
 pygame.init()
 os.environ["SDL_VIDEO_WINDOW_POS"] = "1, 1"
 
-win_wt, win_ht = 384, 384
+win_wt, win_ht = 384, 384 + 128
 fps_clock = pygame.time.Clock()
 fps = 60
 
@@ -70,15 +70,22 @@ def main():
         player = Player(150, win_ht - 66)
 
         while True:
+            dt = fps_clock.tick(fps) / 1000 * fps
+
             out_events()
 
             win.blit(bg, [0, 0])
             player.draw(win)
             keys = pygame.key.get_pressed()
             
+            if (keys[K_a] or keys[K_LEFT]) and (player.x > player.rect.width//4):
+                player.x -= int(player.vel * dt)
+            if (keys[K_d] or keys[K_RIGHT]) and (player.x < win_wt - player.rect.width\
+                                                                 - player.rect.width//4):
+
+                player.x += int(player.vel * dt)
 
             pygame.display.update()
-            dt = fps_clock.tick(fps) / 1000
 
     while True:
         run_game()

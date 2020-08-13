@@ -4,7 +4,7 @@ import os
 import pygame
 from pygame.locals import *
 
-#==========================================================================================
+# ==========================================================================================
 
 
 def terminate():
@@ -31,36 +31,51 @@ def fullname(name):
     return os.path.join("data", name)
 
 
-#==========================================================================================
+# ==========================================================================================
 
-bg = load_img("bg.png")
-player_img = load_img(("player.png"))
+bg = pygame.Color("#2c2137")
+player_color = pygame.Color("#764462")
 
-#==========================================================================================
+# ==========================================================================================
 
 
 pygame.init()
 os.environ["SDL_VIDEO_WINDOW_POS"] = "1, 1"
 
-win_wt, win_ht = 384, 384 + 128
+win_wt, win_ht = 384, 512
 fps_clock = pygame.time.Clock()
-fps = 60
+fps = 120
 
 win = pygame.display.set_mode((win_wt, win_ht))
+
 
 class Player(object):
 
     def __init__(self, x, y):
-        self.img = player_img
-        self.rect = player_img.get_rect()
-        self.rect.top = x
-        self.rect.left = y
-        self.x = self.rect.top
-        self.y = self.rect.left
-        self.vel = 5
+        self.width = 50
+        self.height = 15
+        self.x = int(x)
+        self.y = int(y)
+        self.rect = pygame.Rect(x, y, self.width, self.height)
+        self.color = player_color
+        self.vel = 0
+        self.speed = 4
+        self.left = False
+        self.right = False
 
     def draw(self, win):
-        win.blit(self.img, (self.x, self.y))
+        pygame.draw.rect(win, self.color, self.rect)
+
+    def update(self):
+        self.vel = 0
+        if self.left and not self.right and (self.x > 0):
+            self.vel = -self.speed
+        if self.right and not self.left and (self.x < (win_wt - self.width)):
+            self.vel = self.speed
+
+        self.x += self.vel
+
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
 
 def main():
@@ -70,22 +85,28 @@ def main():
         player = Player(150, win_ht - 66)
 
         while True:
-            dt = fps_clock.tick(fps) / 1000 * fps
 
-            out_events()
+            for event in pygame.event.get():
+                if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                    terminate()
+                if event.type == KEYDOWN:
+                    if (event.key == K_LEFT) or (event.key == K_a):
+                        player.left = True
+                    if (event.key == K_RIGHT) or (event.key == K_d):
+                        player.right = True
 
-            win.blit(bg, [0, 0])
+                if event.type == KEYUP:
+                    if event.key == K_LEFT or (event.key == K_a):
+                        player.left = False
+                    if event.key == K_RIGHT or (event.key == K_d):
+                        player.right = False
+
+            win.fill(bg)
             player.draw(win)
-            keys = pygame.key.get_pressed()
-            
-            if (keys[K_a] or keys[K_LEFT]) and (player.x > player.rect.width//4):
-                player.x -= int(player.vel * dt)
-            if (keys[K_d] or keys[K_RIGHT]) and (player.x < win_wt - player.rect.width\
-                                                                 - player.rect.width//4):
 
-                player.x += int(player.vel * dt)
-
-            pygame.display.update()
+            player.update()
+            pygame.display.flip()
+            fps_clock.tick(fps)
 
     while True:
         run_game()

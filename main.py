@@ -31,22 +31,30 @@ def fullname(name):
     return os.path.join("data", name)
 
 
+def collisions(rect, tiles):
+    hits = []
+    for tile in tiles:
+        if rect.colliderect(tile):
+            hits.append(tile)
+    return hits
+
+
 # ==========================================================================================
 
-bg = pygame.Color("#2c2137")
-player_color = pygame.Color("#764462")
+bg = pygame.Color("#001b2e")
+player_color = pygame.Color("#2d757e")
 
 # ==========================================================================================
 
 
 pygame.init()
-os.environ["SDL_VIDEO_WINDOW_POS"] = "1, 1"
+os.environ["SDL_VIDEO_WINDOW_POS"] = "500, 100"
 
 win_wt, win_ht = 384, 512
 fps_clock = pygame.time.Clock()
 fps = 120
 
-win = pygame.display.set_mode((win_wt, win_ht))
+win = pygame.display.set_mode((win_wt, win_ht), NOFRAME)
 
 
 class Player(object):
@@ -59,23 +67,61 @@ class Player(object):
         self.rect = pygame.Rect(x, y, self.width, self.height)
         self.color = player_color
         self.vel = 0
-        self.speed = 4
+        self.speed = 5
         self.left = False
         self.right = False
 
     def draw(self, win):
         pygame.draw.rect(win, self.color, self.rect)
 
-    def update(self):
+    def update(self, other):
         self.vel = 0
-        if self.left and not self.right and (self.x > 0):
-            self.vel = -self.speed
-        if self.right and not self.left and (self.x < (win_wt - self.width)):
-            self.vel = self.speed
+
+        if self.left and not self.right:
+            self.vel += -self.speed
+        if self.right and not self.left:
+            self.vel += self.speed    
 
         self.x += self.vel
-
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+
+        hits = collisions(self.rect, other.rect)
+        for hit in hits:
+            if self.vel > 0:
+                self.x = hit.left - self.width
+            elif self.vel < 0:
+                self.x = hit.right
+
+
+
+class Border(object):
+    def __init__(self):
+        self.rect = [pygame.Rect(5, 0, 5, win_ht),
+                     pygame.Rect(win_wt - 10, 0, 5, win_ht)]
+        self.color = pygame.Color("#9a7bbc")
+
+    def draw(self, win):
+        for side in self.rect:
+            pygame.draw.rect(win, self.color, side)
+
+
+class Ball(object):
+    
+    def __init__(self):
+        self.diameter = 6
+        self.x = 150 - 3
+        self.y = win_ht - 66 - 6
+        self.rect = pygame.Rect(150 - 3, in_ht - 66 - 6, self.diameter, self.diameter)
+        self.color = pygame.Color("#9a7bbc")
+        self.move = False
+        self.vel = 0
+        self.speed = 6
+
+    def draw(self, win):
+        pygame.draw.rect(win, self.color, self.rect)
+
+    def update(self):
+        pass
 
 
 def main():
@@ -83,6 +129,7 @@ def main():
     def run_game():
 
         player = Player(150, win_ht - 66)
+        borders = Border()
 
         while True:
 
@@ -101,10 +148,13 @@ def main():
                     if event.key == K_RIGHT or (event.key == K_d):
                         player.right = False
 
+            # Draw
             win.fill(bg)
             player.draw(win)
+            borders.draw(win)
 
-            player.update()
+            # Update
+            player.update(borders)
             pygame.display.flip()
             fps_clock.tick(fps)
 

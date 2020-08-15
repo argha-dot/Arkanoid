@@ -4,42 +4,8 @@ import os
 import pygame
 from pygame.locals import *
 
-from assets.particles import Particles
-
-# ==========================================================================================
-
-
-def terminate():
-    pygame.quit()
-    sys.exit()
-
-
-def out_events():
-    for event in pygame.event.get():
-        if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-            terminate()
-
-
-def load_img(name):
-    try:
-        image = pygame.image.load(fullname(name))
-    except pygame.error as e:
-        print("Can't load image:", name)
-        raise SystemExit(e)
-    return image
-
-
-def fullname(name):
-    return os.path.join("assets", name)
-
-
-def collisions(rect, tiles):
-    hits = []
-    for tile in tiles:
-        if rect.colliderect(tile):
-            hits.append(tile)
-    return hits
-
+from assets.player import Player
+from assets.help import *
 
 # ==========================================================================================
 
@@ -57,52 +23,6 @@ fps_clock = pygame.time.Clock()
 fps = 120
 
 win = pygame.display.set_mode((win_wt, win_ht), NOFRAME)
-
-
-class Player(object):
-
-    def __init__(self, x, y):
-        self.width = 50
-        self.height = 15
-        self.x = int(x)
-        self.y = int(y)
-        self.rect = pygame.Rect(x, y, self.width, self.height)
-        self.color = player_color
-        self.vel = 0
-        self.speed = 5
-        self.left = False
-        self.right = False
-        self.boost_right = \
-                Particles(self.x + self.width, self.y + self.height - 5, 50, 2.5, player_color)
-        self.boost_left = \
-                Particles(self.x, self.y + self.height - 5, 50, 2.5, player_color)
-
-    def draw(self, win):
-        pygame.draw.rect(win, self.color, self.rect)
-
-    def update(self, other):
-        self.vel = 0
-
-        if self.left and not self.right:
-            self.vel += -self.speed
-        if self.right and not self.left:
-            self.vel += self.speed    
-
-        self.x += self.vel
-        self.boost_right.x = self.x + self.width - 5
-        self.boost_left.x = self.x + 5
-        self.boost_right.update(win)
-        self.boost_left.update(win)
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-
-        hits = collisions(self.rect, other.rect)
-        for hit in hits:
-            if self.vel > 0:
-                self.x = hit.left - self.width
-            elif self.vel < 0:
-                self.x = hit.right
-
-
 
 
 class Border(object):
@@ -140,7 +60,7 @@ def main():
 
     def run_game():
 
-        player = Player(150, win_ht - 66)
+        player = Player(150, 7 * win_ht//8, player_color)
         borders = Border()
 
         while True:
@@ -166,7 +86,7 @@ def main():
             borders.draw(win)
 
             # Update
-            player.update(borders)
+            player.update(win, borders)
             pygame.display.flip()
             fps_clock.tick(fps)
 

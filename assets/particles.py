@@ -36,7 +36,7 @@ class Particles(object):
 
         for i, p in sorted(enumerate(self.particles), reverse=True):
             p.x -= random.randint(-2, 2)
-            p.y += p.vel
+            p.y += random.randint(self.vel*10 - 5, self.vel*10 + 5)/10
             p.radius -= 0.3
             p.draw(win)
             if p.radius < 1:

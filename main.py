@@ -4,6 +4,8 @@ import os
 import pygame
 from pygame.locals import *
 
+from assets.particles import Particles
+
 # ==========================================================================================
 
 
@@ -28,7 +30,7 @@ def load_img(name):
 
 
 def fullname(name):
-    return os.path.join("data", name)
+    return os.path.join("assets", name)
 
 
 def collisions(rect, tiles):
@@ -70,6 +72,10 @@ class Player(object):
         self.speed = 5
         self.left = False
         self.right = False
+        self.boost_right = \
+                Particles(self.x + self.width, self.y + self.height - 5, 50, 2.5, player_color)
+        self.boost_left = \
+                Particles(self.x, self.y + self.height - 5, 50, 2.5, player_color)
 
     def draw(self, win):
         pygame.draw.rect(win, self.color, self.rect)
@@ -83,6 +89,10 @@ class Player(object):
             self.vel += self.speed    
 
         self.x += self.vel
+        self.boost_right.x = self.x + self.width - 5
+        self.boost_left.x = self.x + 5
+        self.boost_right.update(win)
+        self.boost_left.update(win)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
         hits = collisions(self.rect, other.rect)
@@ -94,10 +104,12 @@ class Player(object):
 
 
 
+
 class Border(object):
     def __init__(self):
         self.rect = [pygame.Rect(5, 0, 5, win_ht),
-                     pygame.Rect(win_wt - 10, 0, 5, win_ht)]
+                     pygame.Rect(win_wt - 10, 0, 5, win_ht), 
+                     pygame.Rect(5, 35, win_wt - 10, 5)]
         self.color = pygame.Color("#9a7bbc")
 
     def draw(self, win):

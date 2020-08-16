@@ -11,7 +11,7 @@ class Player(object):
 
     def __init__(self, x, y, color):
         self.width = 50
-        self.height = 15
+        self.height = 10
         self.x = int(x)
         self.y = int(y)
         self.rect = pygame.Rect(x, y, self.width, self.height)
@@ -22,9 +22,9 @@ class Player(object):
         self.right = False
         self.boost_right = \
             Particles(self.x + self.width, self.y +
-                      self.height - 5, 50, 2.5, color)
+                      self.height - 5, 100, 2.5, color)
         self.boost_left = \
-            Particles(self.x, self.y + self.height - 5, 50, 2.5, color)
+            Particles(self.x, self.y + self.height - 5, 100, 2.5, color)
 
     def draw(self, win):
         pygame.draw.rect(win, self.color, self.rect)
@@ -38,8 +38,8 @@ class Player(object):
             self.vel += self.speed
 
         self.x += self.vel
-        self.boost_right.x = self.x + self.width - 5
-        self.boost_left.x = self.x + 5
+        self.boost_right.x = self.x + self.width - 10
+        self.boost_left.x = self.x + 10
         self.boost_right.update(win)
         self.boost_left.update(win)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)

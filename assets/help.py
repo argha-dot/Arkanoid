@@ -33,3 +33,9 @@ def collisions(rect, tiles):
         if rect.colliderect(tile):
             hits.append(tile)
     return hits
+
+
+def update_fps(fps_clock, font):
+	fps = str(int(fps_clock.get_fps()))
+	fps_text = font.render(fps, 1, pygame.Color("coral"))
+	return fps_text

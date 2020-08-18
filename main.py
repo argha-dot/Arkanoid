@@ -1,18 +1,20 @@
 import sys
 import os
+import copy
 
 import pygame
 from pygame.locals import *
 
 from assets.player import Player
 from assets.help import *
+from assets.ball import Ball
 
 pygame.init()
 os.environ["SDL_VIDEO_WINDOW_POS"] = "500, 100"
 
 win_wt, win_ht = 384, 512
 fps_clock = pygame.time.Clock()
-fps = 120
+fps = 60
 
 win = pygame.display.set_mode((win_wt, win_ht), NOFRAME)
 
@@ -34,77 +36,19 @@ class Border(object):
                      pygame.Rect(5, win_ht - 5, win_wt, 5)]
         self.color = pygame.Color("#9a7bbc")
 
-    def draw(self, win):
-        for side in self.rect:
-            pygame.draw.rect(win, self.color, side)
-
-
-class Ball(object):
-    
-    def __init__(self):
-        self.diameter = 6
-        self.x = 150 + 19
-        self.y = win_ht - 66 - 13
-        self.rect = pygame.Rect(self.x, self.y, self.diameter, self.diameter)
-        self.color = pygame.Color("#9a7bbc")
-        self.img = load_img("ball.png")
-        self.move = False
-        self.velx = 0
-        self.vely = 0
-        self.speedx = 4
-        self.speedy = 4
 
     def draw(self, win):
-        win.blit(self.img, [self.rect.x, self.rect.centery])
-
-    def update(self, other, player):
-        self.velx = 0
-        self.vely = 0
-        
-        if self.move:    
-            self.velx += self.speedx
-            self.vely -= self.speedy
-
-        self.x += self.velx
-        self.rect = pygame.Rect(self.x, self.y, self.diameter, self.diameter)
-        hits = collisions(self.rect, other.rect)
-        for hit in hits:
-            if self.velx < 0:
-                self.x = hit.right
-                self.speedx *= -1
-            elif self.velx > 0:
-                self.x = hit.x - self.rect.width
-                self.speedx *= -1
-        if self.rect.colliderect(player.rect):
-            if self.velx > 0:
-                self.x = player.rect.right
-                self.speedx *= -1
-            if self.velx < 0:
-                self.x = player.rect.left - self.rect.width
-                self.speedx *= -1
-
-        self.y += self.vely
-        self.rect = pygame.Rect(self.x, self.y, self.diameter, self.diameter)
-        hits = collisions(self.rect, other.rect)
-        for hit in hits:
-            if self.vely < 0:
-                self.y = hit.bottom
-                self.speedy *= -1
-            elif self.vely > 0:
-                self.y = hit.top - self.rect.height
-                self.speedy *= -1
-        if self.rect.colliderect(player.rect):
-            self.y = player.rect.top - self.rect.height
-            self.speedy *= -1
+        for i in range(3):
+            pygame.draw.rect(win, self.color, self.rect[i])
 
 
 def main():
 
     def run_game():
 
-        player = Player(150, 7 * win_ht//8, player_color)
+        player = Player(150, 7 * win_ht//8, player_color, 5)
         borders = Border()
-        ball = Ball()
+        ball = Ball(win_ht, 5)
 
         while True:
 
@@ -128,9 +72,10 @@ def main():
             # Draw
             win.fill(bg)
             win.blit(update_fps(fps_clock, font), (10, 0))
-            player.draw(win)
             borders.draw(win)
+            # pygame.draw.line(win, (0, 0, 0), (0, player.y), (win_wt, player.y))
             ball.draw(win)
+            player.draw(win)
 
             # Update
             player.update(win, borders)

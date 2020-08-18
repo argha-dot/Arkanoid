@@ -2,6 +2,7 @@ import sys
 import os
 
 import pygame
+from pygame.locals import *
 
 def terminate():
     pygame.quit()
@@ -39,3 +40,15 @@ def update_fps(fps_clock, font):
 	fps = str(int(fps_clock.get_fps()))
 	fps_text = font.render(fps, 1, pygame.Color("coral"))
 	return fps_text
+
+
+def delay(j, d):
+    i = 0
+    while i < j:
+        pygame.time.wait(d)
+        i += 1
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or \
+                    (event.type == KEYDOWN and event.key == K_ESCAPE):
+                i = j + 1
+                terminate()

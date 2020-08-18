@@ -9,7 +9,7 @@ from assets.help import *
 
 class Player(object):
 
-    def __init__(self, x, y, color):
+    def __init__(self, x, y, color, speed):
         self.width = 50
         self.height = 10
         self.x = int(x)
@@ -17,7 +17,7 @@ class Player(object):
         self.rect = pygame.Rect(x, y, self.width, self.height)
         self.color = color
         self.vel = 0
-        self.speed = 5
+        self.speed = speed
         self.left = False
         self.right = False
         self.boost_right = \

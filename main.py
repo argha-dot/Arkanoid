@@ -1,87 +1,76 @@
-import sys
-import os
-import copy
-
 import pygame
+import sys, os
 from pygame.locals import *
 
-from assets.player import Player
-from assets.help import *
-from assets.ball import Ball
+#==========================================================================================
 
-pygame.init()
-os.environ["SDL_VIDEO_WINDOW_POS"] = "500, 100"
+def terminate():
+    pygame.quit()
+    sys.exit()
 
-win_wt, win_ht = 384, 512
-fps_clock = pygame.time.Clock()
+def out_events():
+    for event in pygame.event.get():
+        if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+            terminate()
+
+def load_img(name):
+    try:
+        image = pygame.image.load(fullname(name))
+    except pygame.error as e:
+        print("Can't load image:", name)
+        raise SystemExit(e)
+    return image
+
+def fullname(name):
+    return os.path.join("data", name)
+
+#==========================================================================================
+
+
+win_wt, win_ht = 700, 700
+BLACK = pygame.Color("#000000")
+
 fps = 60
-
-win = pygame.display.set_mode((win_wt, win_ht), NOFRAME)
-
-
-# ==========================================================================================
-
-bg = pygame.Color("#001b2e")
-player_color = pygame.Color("#2d757e")
-font = pygame.font.SysFont("Arial", 18)
-
-# ==========================================================================================
+fps_clock = pygame.time.Clock()
+pygame.init()
+pygame.mouse.set_visible(False)
+win = pygame.display.set_mode((win_wt, win_ht))
 
 
-class Border(object):
-    def __init__(self):
-        self.rect = [pygame.Rect(5, 0, 5, win_ht),
-                     pygame.Rect(win_wt - 10, 0, 5, win_ht), 
-                     pygame.Rect(5, 35, win_wt - 10, 5),
-                     pygame.Rect(5, win_ht - 5, win_wt, 5)]
-        self.color = pygame.Color("#9a7bbc")
+class Player(object):
 
-
-    def draw(self, win):
-        for i in range(3):
-            pygame.draw.rect(win, self.color, self.rect[i])
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.width = 60
+        self.height = 10
+        self.color = pygame.Color("#c82929")
+    
+    def update(self):
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        pos = pygame.mouse.get_pos()
+        if 10 < pos[0] < win_wt - self.width - 10:
+            self.x = pos[0]
+            pygame.mouse.set_pos(self.x, self.y)
+        if win_ht - 100 < pos[1] < win_ht - 10:
+            self.y = pos[1]
+            pygame.mouse.set_pos(self.x, self.y)
 
 
 def main():
 
     def run_game():
 
-        player = Player(150, 7 * win_ht//8, player_color, 5)
-        borders = Border()
-        ball = Ball(win_ht, 5)
+        player = Player(200, win_ht - 50)
 
         while True:
+            out_events()
+            win.fill(BLACK)
 
-            for event in pygame.event.get():
-                if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-                    terminate()
-                if event.type == KEYDOWN:
-                    if (event.key == K_LEFT) or (event.key == K_a):
-                        player.left = True
-                    if (event.key == K_RIGHT) or (event.key == K_d):
-                        player.right = True
-
-                if event.type == KEYUP:
-                    if event.key == K_LEFT or (event.key == K_a):
-                        player.left = False
-                    if event.key == K_RIGHT or (event.key == K_d):
-                        player.right = False
-                    if event.key == K_SPACE:
-                        ball.move = True
-
-            # Draw
-            win.fill(bg)
-            win.blit(update_fps(fps_clock, font), (10, 0))
-            borders.draw(win)
-            # pygame.draw.line(win, (0, 0, 0), (0, player.y), (win_wt, player.y))
-            ball.draw(win)
-            player.draw(win)
-
-            # Update
-            player.update(win, borders)
-            ball.update(borders, player)
-            pygame.display.flip()
-            fps_clock.tick(fps)
+            player.update()
+            pygame.display.update()
+            dt = fps_clock.tick(fps) / 1000
 
     while True:
         run_game()
@@ -89,3 +78,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

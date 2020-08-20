@@ -1,4 +1,3 @@
 /ignore
-psuedo.txt
 /venv
-/assets/__pycache__
+/__pycache

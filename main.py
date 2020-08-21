@@ -106,6 +106,7 @@ class Ball(object):
     def moves(self):
         self.move = True
         self.right = True
+        self.left = False
         self.up = True
 
     def update(self):
@@ -146,6 +147,18 @@ def collision(player, ball):
     if ball.rect.colliderect(player.rect):
         ball.up = True
         ball.down = False
+        if ball.right:
+            if abs(ball.x - player.x) < 15:
+                ball.right = False
+                ball.left = True
+                print("r")
+                pass
+        if ball.left:
+            if player.width - 15 < abs(ball.x - player.x) < player.width:
+                ball.right = True
+                ball.left = False
+                print("l")
+                pass
 
     if ball.y > win_ht + 10:
         delay(10)

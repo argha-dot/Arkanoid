@@ -1,6 +1,7 @@
 import sys
 import os
-import random
+import pprint
+from random import choice, randrange
 
 import pygame
 from pygame.locals import *
@@ -86,13 +87,50 @@ class Player(object):
 
 
 class Brick(object):
+    def __init__(self, x, y, color):
+        self.width = 50
+        self.height = 25
+        self.x = x
+        self.y = y
+        self.color = color
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+
+    def update(self):
+        pygame.draw.rect(win, self.color, self.rect)
+
+
+def stages():
+    list = []
+    for i in range(0, 7):
+        some = [choice([0, 1]) for _ in range(5)]
+        some = some + some[::-1]
+        list.append(some)
+    return list
+    # 500, 200 -> 50, 25
+
+
+class Level(object):
     def __init__(self):
+        self.level = []
+
+    def make_level(self):
+        descriptive_name = stages()
+        for line in range(len(descriptive_name)):
+            color = (randrange(100, 200), randrange(100, 200), randrange(100, 200))
+            
+            for brick in range(len(descriptive_name[line])):
+                if descriptive_name[line][brick] == 1:
+                    self.level.append(Brick(100 + 52*brick, 50 + 27*line, color))
+        
+    def update(self):
+        for brick in self.level:
+            brick.update()
         pass
 
 
 class Ball(object):
     def __init__(self, vel):
-        self.vel = vel
+        self.vel = vel 
         self.radius = 3
         self.x = win_wt//2 - self.radius
         self.y = win_ht//8 * 7
@@ -132,9 +170,6 @@ class Ball(object):
 
             if self.down and (not self.up):
                 self.y += self.vel
-                # if self.y > win_ht:
-                #     self.up = True
-                #     self.down = False
 
         else:
             self.x = win_wt//2
@@ -143,7 +178,7 @@ class Ball(object):
         self.rect = pygame.Rect(self.x, self.y, self.radius*2, self.radius*2)
 
 
-def collision(player, ball):
+def collision(player, ball): 
     if ball.rect.colliderect(player.rect):
         ball.up = True
         ball.down = False
@@ -151,17 +186,14 @@ def collision(player, ball):
             if abs(ball.x - player.x) < 15:
                 ball.right = False
                 ball.left = True
-                print("r")
-                pass
+
         if ball.left:
             if player.width - 15 < abs(ball.x - player.x) < player.width:
                 ball.right = True
                 ball.left = False
-                print("l")
-                pass
 
     if ball.y > win_ht + 10:
-        delay(10)
+        delay(5)
         ball.move = False
         player.move = False
         ball.down = False
@@ -174,6 +206,8 @@ def main():
         player = Player()
         ball = Ball(2)
         move = False
+        level = Level()
+        level.make_level()
 
         while True:
             for event in pygame.event.get():
@@ -190,7 +224,8 @@ def main():
 
             player.update()
             ball.update()
-            collision(player, ball)
+            level.update()
+            collision(player, ball, level.level)
             pygame.display.update()
             fps_clock.tick(fps)
 

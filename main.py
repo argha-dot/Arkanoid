@@ -178,7 +178,24 @@ class Ball(object):
         self.rect = pygame.Rect(self.x, self.y, self.radius*2, self.radius*2)
 
 
-def collision(player, ball): 
+def collision(player, ball, bricks):
+    for i, brick in sorted(enumerate(bricks), reverse=True):
+        if brick.rect.colliderect(ball.rect):
+            if ball.up and (not ball.down):
+                ball.up = False
+                ball.down = True
+            elif ball.down and (not ball.up):
+                ball.down = False
+                ball.up = True
+            if ball.right:
+                ball.right = False
+                ball.left = True
+            elif ball.left:
+                ball.left = False
+                ball.right = True
+            pygame.draw.rect(win, BLACK, brick.rect)
+            bricks.pop(i)
+    
     if ball.rect.colliderect(player.rect):
         ball.up = True
         ball.down = False

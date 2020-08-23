@@ -113,7 +113,7 @@ class Level(object):
     def __init__(self):
         self.level = []
 
-    def make_level(self):
+    def make_level(self):  
         descriptive_name = stages()
         for line in range(len(descriptive_name)):
             color = (randrange(100, 200), randrange(100, 200), randrange(100, 200))
@@ -125,6 +125,8 @@ class Level(object):
     def update(self):
         for brick in self.level:
             brick.update()
+        if not self.level:
+            self.make_level()
         pass
 
 
@@ -141,32 +143,23 @@ class Ball(object):
         self.up = False
         self.down = False
 
-    def moves(self):
-        self.move = True
-        self.right = True
-        self.left = False
-        self.up = True
-
     def update(self):
         if self.move:
             
             if (self.right and (not self.left)):
                 self.x += self.vel
                 if self.x > win_wt - 10:
-                    self.right = False
-                    self.left = True
+                    self.right = False; self.left = True
 
             if (self.left and (not self.right)):
                 self.x -= self.vel
                 if self.x < 10:
-                    self.right = True
-                    self.left = False
+                    self.right = True; self.left = False
             
             if (self.up and (not self.down)):
                 self.y -= self.vel
                 if self.y < 10:
-                    self.up = False
-                    self.down = True
+                    self.up = False; self.down = True
 
             if self.down and (not self.up):
                 self.y += self.vel
@@ -178,42 +171,53 @@ class Ball(object):
         self.rect = pygame.Rect(self.x, self.y, self.radius*2, self.radius*2)
 
 
+def reset(ball, player):
+    if not (ball.move and player.move):
+        player.move = True; ball.move = True
+        ball.right = True; ball.left = False
+        ball.up = True; ball.down = False
+    else:        
+        ball.move = False; player.move = False
+
+
 def collision(player, ball, bricks):
     for i, brick in sorted(enumerate(bricks), reverse=True):
         if brick.rect.colliderect(ball.rect):
             if ball.up and (not ball.down):
-                ball.up = False
-                ball.down = True
+                if (ball.rect.top <= brick.rect.bottom <= ball.rect.top + ball.vel):
+                    ball.up = False; ball.down = True
+                else:
+                    if ball.left:
+                        ball.left = False; ball.right = True
+                    else:
+                        ball.right = False; ball.left = True
+                        
+
             elif ball.down and (not ball.up):
-                ball.down = False
-                ball.up = True
-            if ball.right:
-                ball.right = False
-                ball.left = True
-            elif ball.left:
-                ball.left = False
-                ball.right = True
+                if (ball.rect.bottom - ball.vel <= brick.rect.top <= ball.rect.bottom):
+                    ball.down = False; ball.up = True
+                else:
+                    if ball.left:
+                        ball.left = False; ball.right = True
+                    else:
+                        ball.right = False; ball.left = True
+            
             pygame.draw.rect(win, BLACK, brick.rect)
             bricks.pop(i)
     
     if ball.rect.colliderect(player.rect):
-        ball.up = True
-        ball.down = False
+        ball.up = True; ball.down = False
         if ball.right:
             if abs(ball.x - player.x) < 15:
-                ball.right = False
-                ball.left = True
+                ball.right = False; ball.left = True
 
         if ball.left:
             if player.width - 15 < abs(ball.x - player.x) < player.width:
-                ball.right = True
-                ball.left = False
+                ball.right = True; ball.left = False
 
-    if ball.y > win_ht + 10:
+    if ball.y > win_ht + 6:
         delay(5)
-        ball.move = False
-        player.move = False
-        ball.down = False
+        reset(ball, player)
 
 
 def main():
@@ -234,8 +238,7 @@ def main():
                     if event.key == K_ESCAPE:
                         terminate()
                     if event.key == K_SPACE:
-                        player.move = True
-                        ball.moves()
+                        reset(ball, player)
 
             win.fill(BLACK)
 

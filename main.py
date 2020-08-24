@@ -125,8 +125,6 @@ class Level(object):
     def update(self):
         for brick in self.level:
             brick.update()
-        if not self.level:
-            self.make_level()
         pass
 
 
@@ -180,8 +178,8 @@ def reset(ball, player):
         ball.move = False; player.move = False
 
 
-def collision(player, ball, bricks):
-    for i, brick in sorted(enumerate(bricks), reverse=True):
+def collision(player, ball, level):
+    for i, brick in sorted(enumerate(level.level), reverse=True):
         if brick.rect.colliderect(ball.rect):
             if ball.up and (not ball.down):
                 if (ball.rect.top <= brick.rect.bottom <= ball.rect.top + ball.vel):
@@ -203,7 +201,7 @@ def collision(player, ball, bricks):
                         ball.right = False; ball.left = True
             
             pygame.draw.rect(win, BLACK, brick.rect)
-            bricks.pop(i)
+            level.level.pop(i)
     
     if ball.rect.colliderect(player.rect):
         ball.up = True; ball.down = False
@@ -214,6 +212,12 @@ def collision(player, ball, bricks):
         if ball.left:
             if player.width - 15 < abs(ball.x - player.x) < player.width:
                 ball.right = True; ball.left = False
+
+    if not level.level:
+        level.make_level()
+        pygame.display.update()
+        delay(10)   
+        reset(ball, player) 
 
     if ball.y > win_ht + 6:
         delay(5)
@@ -245,7 +249,7 @@ def main():
             player.update()
             ball.update()
             level.update()
-            collision(player, ball, level.level)
+            collision(player, ball, level)
             pygame.display.update()
             fps_clock.tick(fps)
 

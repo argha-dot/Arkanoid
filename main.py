@@ -1,7 +1,7 @@
 import sys
 import os
 import pprint
-from random import choice, randrange
+from random import choice, choices, randrange
 
 import pygame
 from pygame.locals import *
@@ -71,7 +71,7 @@ class Player(object):
         pygame.draw.rect(
             win, self.color, (self.x, self.y, self.width, self.height))
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-
+        
         if self.move:
             pos = pygame.mouse.get_pos()
             if 10 < pos[0] < win_wt - self.width - 10:
@@ -94,34 +94,52 @@ class Brick(object):
         self.y = y
         self.color = color
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.drop = choices([1, 0], weights=(10, 90))[0]
 
     def update(self):
         pygame.draw.rect(win, self.color, self.rect)
 
 
-def stages():
-    list = []
-    for i in range(0, 7):
-        some = [choice([0, 1]) for _ in range(5)]
-        some = some + some[::-1]
-        list.append(some)
-    return list
-    # 500, 200 -> 50, 25
+class Drop(object):
+    def __init__(self, x, y):
+        self.width = 30
+        self.height = 20
+        self.color = (randrange(100, 200), randrange(100, 200),  
+            randrange(100, 200))
+        self.x = x
+        self.y = y
+        self.vel = 0.5
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        
+    def update(self):   
+        self.y += self.vel
+        pygame.draw.rect(win, self.color, self.rect)
 
 
 class Level(object):
+    # 500, 200 -> 50, 25
     def __init__(self):
         self.level = []
 
+    def stages(self):
+        list = []
+        for i in range(0, 7):
+                # some = [choice([0, 1]) for _ in range(5)]
+                some = [choices([0, 1])[0] for _ in range(5)]
+                some = some + some[::-1]
+                list.append(some)
+       	return list
+
     def make_level(self):  
-        descriptive_name = stages()
+        descriptive_name = self.stages()
         for line in range(len(descriptive_name)):
-            color = (randrange(100, 200), randrange(100, 200), randrange(100, 200))
+            color = (randrange(100, 200), randrange(100, 200), 
+		     randrange(100, 200))
             
             for brick in range(len(descriptive_name[line])):
                 if descriptive_name[line][brick] == 1:
-                    self.level.append(Brick(100 + 52*brick, 50 + 27*line, color))
-        
+                    self.level.append(Brick(100 + 52*brick, 50 + 27*line,
+		                            color))    
     def update(self):
         for brick in self.level:
             brick.update()
@@ -202,6 +220,10 @@ def collision(player, ball, level):
             
             pygame.draw.rect(win, BLACK, brick.rect)
             level.level.pop(i)
+
+            if brick.drop:
+                print("q")
+
     
     if ball.rect.colliderect(player.rect):
         ball.up = True; ball.down = False

@@ -1,14 +1,13 @@
 import sys
 import os
 import pprint
-from random import choice, choices, randrange
+from random import choices, randrange
 
 import pygame
 from pygame.locals import *
 from pygame import gfxdraw
 
 # ==========================================================================================
-
 
 def terminate():
     pygame.quit()
@@ -94,26 +93,30 @@ class Brick(object):
         self.y = y
         self.color = color
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        self.drop = choices([1, 0], weights=(10, 90))[0]
 
     def update(self):
         pygame.draw.rect(win, self.color, self.rect)
 
 
 class Drop(object):
-    def __init__(self, x, y):
+    def __init__(self, x, y, drop):
         self.width = 30
         self.height = 20
-        self.color = (randrange(100, 200), randrange(100, 200),  
-            randrange(100, 200))
+        self.color = (randrange(100, 200), randrange(100, 200), randrange(100, 200))
         self.x = x
         self.y = y
-        self.vel = 0.5
+        self.drop = drop
+        self.vel = 1
+        self.type = choices(["H"])[0]
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         
     def update(self):   
-        self.y += self.vel
         pygame.draw.rect(win, self.color, self.rect)
+
+
+    def move(self):
+        pygame.draw.rect(win, self.color, self.rect)
+        self.y += self.vel
 
 
 class Level(object):
@@ -124,7 +127,6 @@ class Level(object):
     def stages(self):
         list = []
         for i in range(0, 7):
-                # some = [choice([0, 1]) for _ in range(5)]
                 some = [choices([0, 1])[0] for _ in range(5)]
                 some = some + some[::-1]
                 list.append(some)
@@ -221,11 +223,8 @@ def collision(player, ball, level):
             pygame.draw.rect(win, BLACK, brick.rect)
             level.level.pop(i)
 
-            if brick.drop:
-                print("q")
-
-    
     if ball.rect.colliderect(player.rect):
+        ball.rect.bottom = player.rect.top
         ball.up = True; ball.down = False
         if ball.right:
             if abs(ball.x - player.x) < 15:
@@ -258,19 +257,19 @@ def main():
 
         while True:
             for event in pygame.event.get():
-                if event.type == QUIT:
+                if event.type == QUIT or (event.type == KEYDOWN and \
+                   (event.key == K_ESCAPE)):
                     terminate()
-                if event.type == KEYDOWN:
-                    if event.key == K_ESCAPE:
-                        terminate()
-                    if event.key == K_SPACE:
-                        reset(ball, player)
+
+                if (event.type == MOUSEBUTTONDOWN and (event.button == 1)) or \
+                   (event.type == KEYDOWN and event.key == K_SPACE):
+                    reset(ball, player)
 
             win.fill(BLACK)
 
             player.update()
-            ball.update()
             level.update()
+            ball.update()
             collision(player, ball, level)
             pygame.display.update()
             fps_clock.tick(fps)

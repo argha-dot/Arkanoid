@@ -59,16 +59,15 @@ win = pygame.display.set_mode((win_wt, win_ht))
 
 class Player(object):
     def __init__(self):
-        self.width = 60
+        self.width  = 60
         self.height = 10
-        self.x = (win_wt//2) - (self.width//2)
-        self.y = win_ht - 50
-        self.move = False
-        self.color = pygame.Color("#c80000")
+        self.x      = (win_wt//2) - (self.width//2)
+        self.y      = win_ht - 50
+        self.move   = False
+        self.color  = pygame.Color("#c80000")
 
     def update(self):
-        pygame.draw.rect(
-            win, self.color, (self.x, self.y, self.width, self.height))
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         
         if self.move:
@@ -87,34 +86,32 @@ class Player(object):
 
 class Brick(object):
     def __init__(self, x, y, color):
-        self.width = 50
+        self.width  = 50
         self.height = 25
-        self.x = x
-        self.y = y
-        self.color = color
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.x      = x
+        self.y      = y
+        self.color  = color
+        self.rect   = pygame.Rect(self.x, self.y, self.width, self.height)
+
+    def __str__(self):
+        return f"{self.x} {self.y}"
 
     def update(self):
         pygame.draw.rect(win, self.color, self.rect)
 
 
 class Drop(object):
-    def __init__(self, x, y, drop):
-        self.width = 30
+    def __init__(self, x, y, level):
+        self.width  = 30
         self.height = 20
-        self.color = (randrange(100, 200), randrange(100, 200), randrange(100, 200))
-        self.x = x
-        self.y = y
-        self.drop = drop
-        self.vel = 1
-        self.type = choices(["H"])[0]
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.type   = choices(["H"])[0]
+        self.color  = (randrange(100, 200), randrange(100, 200), randrange(100, 200))
+        self.x      = x
+        self.y      = y
+        self.vel    = 1
+        self.rect   = pygame.Rect(self.x, self.y, self.width, self.height)
         
     def update(self):   
-        pygame.draw.rect(win, self.color, self.rect)
-
-
-    def move(self):
         pygame.draw.rect(win, self.color, self.rect)
         self.y += self.vel
 
@@ -123,43 +120,52 @@ class Level(object):
     # 500, 200 -> 50, 25
     def __init__(self):
         self.level = []
+        self.drops = []
 
     def stages(self):
         list = []
         for i in range(0, 7):
-                some = [choices([0, 1])[0] for _ in range(5)]
-                some = some + some[::-1]
-                list.append(some)
+            some = [choices([0, 1])[0] for _ in range(5)]
+            some = some + some[::-1]
+            list.append(some)
        	return list
 
     def make_level(self):  
-        descriptive_name = self.stages()
-        for line in range(len(descriptive_name)):
-            color = (randrange(100, 200), randrange(100, 200), 
+        descriptive_var_name = self.stages()
+        
+        for line in range(len(descriptive_var_name)):
+            color = (randrange(100, 200), randrange(100, 200),  
 		     randrange(100, 200))
             
-            for brick in range(len(descriptive_name[line])):
-                if descriptive_name[line][brick] == 1:
+            for brick in range(len(descriptive_var_name[line])):
+                if descriptive_var_name[line][brick] == 1:
                     self.level.append(Brick(100 + 52*brick, 50 + 27*line,
 		                            color))    
+    
+        self.drops = choices(self.level, k=randrange(4, 8))
+
+        for x in self.drops:
+            print(x)
+        
     def update(self):
         for brick in self.level:
             brick.update()
+        
         pass
 
 
 class Ball(object):
     def __init__(self, vel):
-        self.vel = vel 
+        self.vel    = vel 
         self.radius = 3
-        self.x = win_wt//2 - self.radius
-        self.y = win_ht//8 * 7
-        self.move = False
-        self.color = pygame.Color("#c80000")
-        self.right = False
-        self.left = False
-        self.up = False
-        self.down = False
+        self.x      = win_wt//2 - self.radius
+        self.y      = win_ht//8 * 7
+        self.move   = False
+        self.color  = pygame.Color("#c80000")
+        self.right  = False
+        self.left   = False
+        self.up     = False
+        self.down   = False
 
     def update(self):
         if self.move:
@@ -192,15 +198,15 @@ class Ball(object):
 def reset(ball, player):
     if not (ball.move and player.move):
         player.move = True; ball.move = True
-        ball.right = True; ball.left = False
-        ball.up = True; ball.down = False
+        ball.right  = True; ball.left = False
+        ball.up     = True; ball.down = False
     else:        
-        ball.move = False; player.move = False
+        ball.move   = False; player.move = False
 
 
 def collision(player, ball, level):
     for i, brick in sorted(enumerate(level.level), reverse=True):
-        if brick.rect.colliderect(ball.rect):
+        if ball.rect.colliderect(brick.rect):
             if ball.up and (not ball.down):
                 if (ball.rect.top <= brick.rect.bottom <= ball.rect.top + ball.vel):
                     ball.up = False; ball.down = True
@@ -219,7 +225,12 @@ def collision(player, ball, level):
                         ball.left = False; ball.right = True
                     else:
                         ball.right = False; ball.left = True
-            
+
+            if brick in level.drops:
+                print(f"  {brick.x} {brick.y}")
+                
+
+              
             pygame.draw.rect(win, BLACK, brick.rect)
             level.level.pop(i)
 
@@ -250,9 +261,9 @@ def main():
     def run_game():
 
         player = Player()
-        ball = Ball(2)
-        move = False
-        level = Level()
+        ball   = Ball(2)
+        move   = False
+        level  = Level()
         level.make_level()
 
         while True:

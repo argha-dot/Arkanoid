@@ -79,9 +79,14 @@ class Player(object):
                 self.y = pos[1]
                 pygame.mouse.set_pos(self.x, self.y)
         else:
-            self.x = (win_wt//2) - (self.width//2)
+            # self.x = (win_wt//2) - (self.width//2)
             self.y = win_ht - 50
-            pygame.mouse.set_pos((win_wt//2) - (self.width//2), win_ht - 50)
+            pygame.mouse.set_pos(self.x, win_ht - 50)
+            pos = pygame.mouse.get_pos()
+            if 10 < pos[0] < win_wt - self.width - 10:
+                self.x = pos[0]
+                pygame.mouse.set_pos(self.x, self.y)
+
 
 
 class Brick(object):
@@ -101,7 +106,7 @@ class Brick(object):
 
 
 class Drop(object):
-    def __init__(self, x, y, level):
+    def __init__(self, x, y):
         self.width  = 30
         self.height = 20
         self.type   = choices(["H"])[0]
@@ -111,10 +116,10 @@ class Drop(object):
         self.vel    = 1
         self.rect   = pygame.Rect(self.x, self.y, self.width, self.height)
         
-    def update(self):   
+    def update(self):
         pygame.draw.rect(win, self.color, self.rect)
         self.y += self.vel
-
+        
 
 class Level(object):
     # 500, 200 -> 50, 25
@@ -167,7 +172,7 @@ class Ball(object):
         self.up     = False
         self.down   = False
 
-    def update(self):
+    def update(self, player):
         if self.move:
             
             if (self.right and (not self.left)):
@@ -189,7 +194,7 @@ class Ball(object):
                 self.y += self.vel
 
         else:
-            self.x = win_wt//2
+            self.x = player.x + player.width//2
             self.y = win_ht//10 * 9
         gfxdraw.filled_circle(win, self.x, self.y, self.radius*2, self.color)
         self.rect = pygame.Rect(self.x, self.y, self.radius*2, self.radius*2)
@@ -205,6 +210,7 @@ def reset(ball, player):
 
 
 def collision(player, ball, level):
+
     for i, brick in sorted(enumerate(level.level), reverse=True):
         if ball.rect.colliderect(brick.rect):
             if ball.up and (not ball.down):
@@ -216,8 +222,8 @@ def collision(player, ball, level):
                     else:
                         ball.right = False; ball.left = True
                         
-
-            elif ball.down and (not ball.up):
+        if ball.rect.colliderect(brick.rect):
+            if ball.down and (not ball.up):
                 if (ball.rect.bottom - ball.vel <= brick.rect.top <= ball.rect.bottom):
                     ball.down = False; ball.up = True
                 else:
@@ -225,12 +231,11 @@ def collision(player, ball, level):
                         ball.left = False; ball.right = True
                     else:
                         ball.right = False; ball.left = True
-
+        
+        if ball.rect.colliderect(brick.rect):
             if brick in level.drops:
                 print(f"  {brick.x} {brick.y}")
-                
-
-              
+            
             pygame.draw.rect(win, BLACK, brick.rect)
             level.level.pop(i)
 
@@ -280,7 +285,7 @@ def main():
 
             player.update()
             level.update()
-            ball.update()
+            ball.update(player)
             collision(player, ball, level)
             pygame.display.update()
             fps_clock.tick(fps)

@@ -1,6 +1,6 @@
 import sys
 import os
-import pprint
+import copy
 from random import choices, randrange
 
 import pygame
@@ -70,7 +70,7 @@ class Player(object):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         
-        if self.move:
+        if self.move:          
             pos = pygame.mouse.get_pos()
             if 10 < pos[0] < win_wt - self.width - 10:
                 self.x = pos[0]
@@ -79,7 +79,6 @@ class Player(object):
                 self.y = pos[1]
                 pygame.mouse.set_pos(self.x, self.y)
         else:
-            # self.x = (win_wt//2) - (self.width//2)
             self.y = win_ht - 50
             pygame.mouse.set_pos(self.x, win_ht - 50)
             pos = pygame.mouse.get_pos()
@@ -107,25 +106,29 @@ class Brick(object):
 
 class Drop(object):
     def __init__(self, x, y):
-        self.width  = 30
-        self.height = 20
+        self.width  = 50
+        self.height = 25
         self.type   = choices(["H"])[0]
-        self.color  = (randrange(100, 200), randrange(100, 200), randrange(100, 200))
+        self.color  = (randrange(100, 200), 0, 0)
         self.x      = x
         self.y      = y
         self.vel    = 1
         self.rect   = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.move   = False
         
     def update(self):
-        pygame.draw.rect(win, self.color, self.rect)
-        self.y += self.vel
-        
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        if self.move:
+            pygame.draw.rect(win, self.color, [self.rect.x, self.rect.y, self.rect.width - 5, self.rect.height - 5])
+            self.y += self.vel
+
 
 class Level(object):
     # 500, 200 -> 50, 25
     def __init__(self):
         self.level = []
         self.drops = []
+        self.drop_s = []
 
     def stages(self):
         list = []
@@ -148,6 +151,7 @@ class Level(object):
 		                            color))    
     
         self.drops = choices(self.level, k=randrange(4, 8))
+        self.drop_s = [Drop(x.x, x.y) for x in self.drops]
 
         for x in self.drops:
             print(x)
@@ -155,6 +159,9 @@ class Level(object):
     def update(self):
         for brick in self.level:
             brick.update()
+
+        for i in range(len(self.drop_s)):
+            self.drop_s[i].update()
         
         pass
 
@@ -239,6 +246,11 @@ def collision(player, ball, level):
             pygame.draw.rect(win, BLACK, brick.rect)
             level.level.pop(i)
 
+    for i, drop in sorted(enumerate(level.drop_s), reverse=True):
+        if ball.rect.colliderect(drop.rect):
+            drop.move = True
+            
+            
     if ball.rect.colliderect(player.rect):
         ball.rect.bottom = player.rect.top
         ball.up = True; ball.down = False

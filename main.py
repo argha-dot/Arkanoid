@@ -109,15 +109,15 @@ class Drop(object):
         self.width  = 50
         self.height = 25
         self.type   = choices(["H"])[0]
-        self.color  = (randrange(100, 200), 0, 0)
+        self.color  = (0, 0, randrange(100, 200))
         self.x      = x
         self.y      = y
-        self.vel    = 1
-        self.rect   = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.vel    = 0.75
+        self.rect   = pygame.Rect(self.x, int(self.y), self.width, self.height)
         self.move   = False
         
     def update(self):
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.rect = pygame.Rect(self.x, int(self.y), self.width, self.height)
         if self.move:
             pygame.draw.rect(win, self.color, [self.rect.x, self.rect.y, self.rect.width - 5, self.rect.height - 5])
             self.y += self.vel
@@ -147,14 +147,14 @@ class Level(object):
             
             for brick in range(len(descriptive_var_name[line])):
                 if descriptive_var_name[line][brick] == 1:
-                    self.level.append(Brick(100 + 52*brick, 50 + 27*line,
+                    self.level.append(Brick(100 + 52 * brick, 50 + 27 * line,
 		                            color))    
     
-        self.drops = choices(self.level, k=randrange(4, 8))
+        self.drops = choices(self.level, k=randrange(2, 5))
         self.drop_s = [Drop(x.x, x.y) for x in self.drops]
 
         for x in self.drops:
-            print(x)
+            print(x)    
         
     def update(self):
         for brick in self.level:
@@ -249,7 +249,14 @@ def collision(player, ball, level):
     for i, drop in sorted(enumerate(level.drop_s), reverse=True):
         if ball.rect.colliderect(drop.rect):
             drop.move = True
-            
+
+    for i, drop in sorted(enumerate(level.drop_s), reverse=True):
+        if player.rect.colliderect(drop.rect) and drop.move:
+            drop.move = False
+            pygame.draw.rect(win, BLACK, drop.rect)
+            level.drop_s.pop(i)
+            print("q")
+
             
     if ball.rect.colliderect(player.rect):
         ball.rect.bottom = player.rect.top

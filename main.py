@@ -1,12 +1,11 @@
 import sys
 import os
-import copy
+import pickle
 from time import time
 from random import choices, randrange
 
 import pygame
 from pygame.locals import *
-from pygame import gfxdraw
 
 # ==========================================================================================
 
@@ -47,7 +46,6 @@ def fullname(name):
 
 # ==========================================================================================
 
-
 win_wt, win_ht = 700, 700
 BLACK = pygame.Color("#000000")
 
@@ -66,7 +64,8 @@ class Player(object):
         self.y      = win_ht - 50
         self.move   = False
         self.color  = pygame.Color("#c80000")
-        self.lives  = 3
+        self.max_lives  = 3
+        self.lives = self.max_lives
 
     def update(self):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
@@ -88,6 +87,8 @@ class Player(object):
                 self.x = pos[0]
                 pygame.mouse.set_pos(self.x, self.y)
 
+        for i in range(self.lives):
+            pygame.draw.rect(win, (200, 0, 0), [0 + 15*i, 0, 10, 10])
 
 
 class Brick(object):
@@ -218,7 +219,6 @@ def reset(ball, player):
 
 
 def collision(player, ball, level):
-
     for i, brick in sorted(enumerate(level.level), reverse=True):
         if ball.rect.colliderect(brick.rect):
             if ball.up and (not ball.down):
@@ -251,7 +251,6 @@ def collision(player, ball, level):
     for i, drop in sorted(enumerate(level.drop_s), reverse=True):
         if player.rect.colliderect(drop.rect) and drop.move:
             player.lives += 1
-            print(player.lives)
             drop.move = False
             pygame.draw.rect(win, BLACK, drop.rect)
             level.drop_s.pop(i)
@@ -261,11 +260,11 @@ def collision(player, ball, level):
         ball.rect.bottom = player.rect.top
         ball.up = True; ball.down = False
         if ball.right:
-            if abs(ball.x - player.x) < 15:
+            if abs(ball.x - player.x) < 10:
                 ball.right = False; ball.left = True
 
         if ball.left:
-            if player.width - 15 < abs(ball.x - player.x) < player.width:
+            if player.width - 10 < abs(ball.x - player.x) < player.width:
                 ball.right = True; ball.left = False
 
     if not level.level:
@@ -277,7 +276,6 @@ def collision(player, ball, level):
     if ball.y > win_ht + 6:
         delay(5)
         player.lives -= 1
-        print(player.lives)
         reset(ball, player)
 
 
@@ -287,7 +285,6 @@ def main():
         global fps
         player = Player()
         ball   = Ball(4)
-        move   = False
         level  = Level()
         level.make_level()
 

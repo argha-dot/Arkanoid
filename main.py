@@ -9,17 +9,19 @@ from pygame.locals import *
 
 # ==========================================================================================
 
+# For Graceful Exit
 def terminate():
     pygame.quit()
     sys.exit()
 
 
+# Helps in the Exit
 def out_events():
     for event in pygame.event.get():
         if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
             terminate()
 
-
+# Loads image
 def load_img(name):
     try:
         image = pygame.image.load(fullname(name))
@@ -28,7 +30,7 @@ def load_img(name):
         raise SystemExit(e)
     return image
 
-
+# Delay Script
 def delay(j):
     i = 0
     while i < j:
@@ -40,7 +42,7 @@ def delay(j):
                 i = j + 1
                 terminate()
 
-
+# Full pathname
 def fullname(name):
     return os.path.join("data", name)
 
@@ -52,7 +54,7 @@ BLACK = pygame.Color("#000000")
 fps = 300
 fps_clock = pygame.time.Clock()
 pygame.init()
-pygame.mouse.set_visible(False)
+pygame.mouse.set_visible(False)   # Sets mouse visibility
 win = pygame.display.set_mode((win_wt, win_ht))
 
 
@@ -63,7 +65,7 @@ class Player(object):
         self.x      = (win_wt//2) - (self.width//2)
         self.y      = win_ht - 50
         self.move   = False
-        self.color  = pygame.Color("#c80000")
+        self.color = pygame.Color("#c80000")
         self.max_lives  = 3
         self.lives = self.max_lives
 
@@ -173,6 +175,8 @@ class Ball(object):
         self.x      = win_wt//2 - self.radius
         self.y      = win_ht//8 * 7
         self.move   = False
+        self.hit = False
+        self.timer = 0
         self.color  = pygame.Color("#c80000")
         self.right  = False
         self.left   = False
@@ -180,32 +184,38 @@ class Ball(object):
         self.down   = False
 
     def update(self, player, dt):
-        if self.move:
-            
+        if self.move:            
             if (self.right and (not self.left)):
                 self.x += self.vel*dt
                 if self.x > win_wt - 10:
+                    self.hit = True
+                    self.timer = 30
                     self.right = False; self.left = True
 
             if (self.left and (not self.right)):
                 self.x -= self.vel*dt
                 if self.x < 10:
+                    self.hit = True
+                    self.timer = 30
                     self.right = True; self.left = False
             
             if (self.up and (not self.down)):
                 self.y -= self.vel*dt
                 if self.y < 10:
+                    self.hit = True
+                    self.timer = 30
                     self.up = False; self.down = True
 
             if self.down and (not self.up):
                 self.y += self.vel*dt
 
+
         else:
             self.x = player.x + player.width//2 - self.radius
             self.y = win_ht//10 * 9
-        # gfxdraw.filled_circle(win, int(self.x), int(self.y), self.radius*2, self.color)
-        pygame.draw.rect(win, self.color, [int(self.x), int(
-            self.y), self.radius*2, self.radius*2])
+            
+        pygame.draw.rect(win, self.color, [int(self.x), int(self.y), self.radius*2, self.radius*2])
+        
         self.rect = pygame.Rect(int(self.x), int(self.y), self.radius*2, self.radius*2)
 
 
@@ -229,7 +239,8 @@ def collision(player, ball, level):
                         ball.left = False; ball.right = True
                     else:
                         ball.right = False; ball.left = True
-                        
+
+        
         if ball.rect.colliderect(brick.rect):
             if ball.down and (not ball.up):
                 if (ball.rect.bottom - ball.vel <= brick.rect.top <= ball.rect.bottom):
@@ -244,6 +255,7 @@ def collision(player, ball, level):
             pygame.draw.rect(win, BLACK, brick.rect)
             level.level.pop(i)
 
+        
     for i, drop in sorted(enumerate(level.drop_s), reverse=True):
         if ball.rect.colliderect(drop.rect):
             drop.move = True
@@ -301,7 +313,7 @@ def main():
                     terminate()
 
                 if event.type == KEYDOWN and (event.key == K_e):
-                    fps = 120
+                    fps = 60
                     
                 if event.type == KEYUP and (event.key == K_e):
                     fps = 300
@@ -323,6 +335,16 @@ def main():
                 pygame.display.update()
                 delay(10)
                 reset(ball, player)
+
+            if ball.timer > 0:
+                ball.timer -= 1
+
+            if ball.timer:
+                ball.color = (200, 200, 200)
+                ball.radius = 8
+            else:
+                ball.color = pygame.Color("#c80000")
+                ball.radius = 6
 
             pygame.display.update()
             fps_clock.tick(fps)

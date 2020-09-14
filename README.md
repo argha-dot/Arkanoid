@@ -11,7 +11,7 @@ A simple breakout clone.
 
 ## Info
 ---
-This project is a simple breakout clone, made for fun and experimentation. As of right now it is in it's early stages, heck it doesn't even a start menu. Only the core gameplay with an basic health and a bad upgrades systems are implemented as of now. The primary goal moving forward is to learn and add a ton of "juice" to the game, and get better at adding visual effects.
+This project is a simple breakout clone, made for fun and experimentation. As of right now it is in it's early stages, heck it doesn't even have a start menu. Only the core gameplay alongwith an basic health and a bad upgrades systems are implemented as of now. The primary goal moving forward is to learn and add a ton of "juice" to the game, and get better at adding visual effects.
 
 Python and it's Pygame module are used for creating the game.
 

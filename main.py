@@ -58,6 +58,7 @@ pygame.mouse.set_visible(False)   # Sets mouse visibility
 win = pygame.display.set_mode((win_wt, win_ht))
 
 
+# Player class
 class Player(object):
     def __init__(self):
         self.width  = 60
@@ -66,7 +67,7 @@ class Player(object):
         self.y      = win_ht - 50
         self.move   = False
         self.color = pygame.Color("#c80000")
-        self.max_lives  = 3
+        self.max_lives  = 3                               # Initial Lives when starting the game
         self.lives = self.max_lives
 
     def update(self):
@@ -74,28 +75,29 @@ class Player(object):
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         
         if self.move:          
-            pos = pygame.mouse.get_pos()
-            if 10 < pos[0] < win_wt - self.width - 10:
-                self.x = pos[0]
+            pos = pygame.mouse.get_pos()                        # Gets the mouse position
+            if 10 < pos[0] < win_wt - self.width - 10:          # Limits the movement in x-axis
+                self.x = pos[0]                              
                 pygame.mouse.set_pos(self.x, self.y)
-            if win_ht - 250 < pos[1] < win_ht - 10:
+            if win_ht - 250 < pos[1] < win_ht - 10:             # Limits the movement in y-axis
                 self.y = pos[1]
                 pygame.mouse.set_pos(self.x, self.y)
-        else:
-            self.y = win_ht - 50
-            pygame.mouse.set_pos(self.x, win_ht - 50)
+        else:                                                   # Sets the mouse pos to the 
+            self.y = win_ht - 50                                # starting position
+            pygame.mouse.set_pos(self.x, win_ht - 50)           
             pos = pygame.mouse.get_pos()
             if 10 < pos[0] < win_wt - self.width - 10:
                 self.x = pos[0]
                 pygame.mouse.set_pos(self.x, self.y)
 
-        for i in range(self.lives):
+        for i in range(self.lives):     
             pygame.draw.rect(win, (200, 0, 0), [0 + 15*i, 0, 10, 10])
 
 
+# Brick class
 class Brick(object):
     def __init__(self, x, y, color):
-        self.width  = 50
+        self.width  = 50                                        
         self.height = 25
         self.x      = x
         self.y      = y
@@ -109,12 +111,13 @@ class Brick(object):
         pygame.draw.rect(win, self.color, self.rect)
 
 
+# Drop item class
 class Drop(object):
     def __init__(self, x, y):
         self.width  = 50
         self.height = 25
-        self.type   = choices(["H"])[0]
-        self.color  = (0, 0, randrange(100, 200))
+        self.type   = choices(["H"])[0]                     
+        self.color  = (0, 0, randrange(100, 200))           
         self.x      = x
         self.y      = y
         self.vel    = 1.75
@@ -176,6 +179,7 @@ class Ball(object):
         self.y      = win_ht//8 * 7
         self.move   = False
         self.hit = False
+        self.time = 15
         self.timer = 0
         self.color  = pygame.Color("#c80000")
         self.right  = False
@@ -189,21 +193,21 @@ class Ball(object):
                 self.x += self.vel*dt
                 if self.x > win_wt - 10:
                     self.hit = True
-                    self.timer = 30
+                    self.timer = self.time
                     self.right = False; self.left = True
 
             if (self.left and (not self.right)):
                 self.x -= self.vel*dt
                 if self.x < 10:
                     self.hit = True
-                    self.timer = 30
+                    self.timer = self.time
                     self.right = True; self.left = False
             
             if (self.up and (not self.down)):
                 self.y -= self.vel*dt
                 if self.y < 10:
                     self.hit = True
-                    self.timer = 30
+                    self.timer = self.time
                     self.up = False; self.down = True
 
             if self.down and (not self.up):
@@ -231,6 +235,8 @@ def reset(ball, player):
 def collision(player, ball, level):
     for i, brick in sorted(enumerate(level.level), reverse=True):
         if ball.rect.colliderect(brick.rect):
+            ball.hit = True
+            ball.timer = ball.time
             if ball.up and (not ball.down):
                 if (ball.rect.top <= brick.rect.bottom <= ball.rect.top + ball.vel):
                     ball.up = False; ball.down = True
@@ -240,9 +246,7 @@ def collision(player, ball, level):
                     else:
                         ball.right = False; ball.left = True
 
-        
-        if ball.rect.colliderect(brick.rect):
-            if ball.down and (not ball.up):
+            else :
                 if (ball.rect.bottom - ball.vel <= brick.rect.top <= ball.rect.bottom):
                     ball.down = False; ball.up = True
                 else:
@@ -270,6 +274,8 @@ def collision(player, ball, level):
             
     if ball.rect.colliderect(player.rect):
         ball.rect.bottom = player.rect.top
+        ball.hit = True
+        ball.timer = ball.time
         ball.up = True; ball.down = False
         if ball.right:
             if abs(ball.x - player.x) < 10:
@@ -293,8 +299,29 @@ def collision(player, ball, level):
 
 def main():
 
+    def game_over():
+        
+        while True:
+            for event in pygame.event.get():
+                if event.type == QUIT or (event.type == KEYDOWN and
+                   (event.key == K_ESCAPE)):
+                    terminate()
+
+                if event.type == KEYDOWN and (event.key == K_RETURN or event.key == K_SPACE):
+                    return
+            
+            win.fill((50, 50, 50))
+
+            text_font = pygame.font.SysFont("comicsans", 45)
+            text = text_font.render("Game Over", True, (5, 5, 5))
+            text_rect = text.get_rect()
+            win.blit(text, (win_wt//2 - text_rect.width//2, 100))
+
+            pygame.display.update()
+
     def run_game():
         global fps
+
         player = Player()
         ball   = Ball(4)
         level  = Level()
@@ -308,12 +335,14 @@ def main():
             last_time = time()
 
             for event in pygame.event.get():
-                if event.type == QUIT or (event.type == KEYDOWN and \
-                   (event.key == K_ESCAPE)):
+                if event.type == QUIT:
+                    terminate()
+
+                if event.type == KEYDOWN and (event.key == K_ESCAPE):
                     terminate()
 
                 if event.type == KEYDOWN and (event.key == K_e):
-                    fps = 60
+                    fps = 10
                     
                 if event.type == KEYUP and (event.key == K_e):
                     fps = 300
@@ -330,27 +359,27 @@ def main():
             collision(player, ball, level)
 
             if player.lives < 0:
-                player.lives = 3
-                level.make_level()
                 pygame.display.update()
                 delay(10)
-                reset(ball, player)
-
+                game_over()
+                return
+                
             if ball.timer > 0:
                 ball.timer -= 1
 
             if ball.timer:
-                ball.color = (200, 200, 200)
-                ball.radius = 8
+                ball.color = pygame.Color("#c86464")
+                ball.radius = 10
             else:
                 ball.color = pygame.Color("#c80000")
                 ball.radius = 6
 
             pygame.display.update()
             fps_clock.tick(fps)
-            
+
 
     while True:
+        # game_over()
         run_game()
 
 

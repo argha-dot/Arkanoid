@@ -60,11 +60,12 @@ win = pygame.display.set_mode((win_wt, win_ht))
 
 # Player class
 class Player(object):
-    def __init__(self):
+    def __init__(self, vel):
         self.width  = 60
         self.height = 10
         self.x      = (win_wt//2) - (self.width//2)
         self.y      = win_ht - 50
+        self.vel    = vel
         self.move   = False
         self.color = pygame.Color("#c80000")
         self.max_lives  = 3                               # Initial Lives when starting the game
@@ -73,7 +74,7 @@ class Player(object):
     def update(self):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        
+
         if self.move:          
             pos = pygame.mouse.get_pos()                        # Gets the mouse position
             if 10 < pos[0] < win_wt - self.width - 10:          # Limits the movement in x-axis
@@ -82,12 +83,36 @@ class Player(object):
             if win_ht - 250 < pos[1] < win_ht - 10:             # Limits the movement in y-axis
                 self.y = pos[1]
                 pygame.mouse.set_pos(self.x, self.y)
+
+            keys = pygame.key.get_pressed()           
+            if keys[K_a] and self.x > 10:
+                self.x -= self.vel
+                pygame.mouse.set_pos(self.x, self.y)
+            if keys[K_d] and self.x < win_wt - self.width - 10:
+                self.x += self.vel
+                pygame.mouse.set_pos(self.x, self.y)
+            if keys[K_w] and self.y > win_ht - 250:
+                self.y -= self.vel
+                pygame.mouse.set_pos(self.x, self.y)
+            if keys[K_s] and self.y < win_ht - 10:
+                self.y += self.vel
+                pygame.mouse.set_pos(self.x, self.y)
+
         else:                                                   # Sets the mouse pos to the 
             self.y = win_ht - 50                                # starting position
             pygame.mouse.set_pos(self.x, win_ht - 50)           
+            
             pos = pygame.mouse.get_pos()
             if 10 < pos[0] < win_wt - self.width - 10:
                 self.x = pos[0]
+                pygame.mouse.set_pos(self.x, self.y)
+            
+            keys = pygame.key.get_pressed()
+            if keys[K_a] and self.x > 10:
+                self.x -= self.vel
+                pygame.mouse.set_pos(self.x, self.y)
+            if keys[K_d] and self.x < win_wt - self.width - 10:
+                self.x += self.vel
                 pygame.mouse.set_pos(self.x, self.y)
 
         for i in range(self.lives):     
@@ -139,12 +164,12 @@ class Level(object):
         self.drop_s = []
 
     def stages(self):
-        list = []
+        arr = []
         for i in range(0, 7):
             some = [choices([0, 1])[0] for _ in range(5)]
             some = some + some[::-1]
-            list.append(some)
-       	return list
+            arr.append(some)
+       	return arr
 
     def make_level(self):  
         descriptive_var_name = self.stages()
@@ -168,8 +193,6 @@ class Level(object):
         for i in range(len(self.drop_s)):
             self.drop_s[i].update(dt)
         
-        pass
-
 
 class Ball(object):
     def __init__(self, vel):
@@ -299,6 +322,12 @@ def collision(player, ball, level):
 
 def main():
 
+    def start_screen():
+
+        while True:
+
+            pass
+
     def game_over():
         
         while True:
@@ -310,10 +339,10 @@ def main():
                 if event.type == KEYDOWN and (event.key == K_RETURN or event.key == K_SPACE):
                     return
             
-            win.fill((50, 50, 50))
+            win.fill((0, 0, 0))
 
             text_font = pygame.font.SysFont("comicsans", 45)
-            text = text_font.render("Game Over", True, (5, 5, 5))
+            text = text_font.render("Game Over", True, (50, 50, 50))
             text_rect = text.get_rect()
             win.blit(text, (win_wt//2 - text_rect.width//2, 100))
 
@@ -322,7 +351,7 @@ def main():
     def run_game():
         global fps
 
-        player = Player()
+        player = Player(4)
         ball   = Ball(4)
         level  = Level()
         level.make_level()

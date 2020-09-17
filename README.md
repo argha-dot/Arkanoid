@@ -17,8 +17,9 @@ Python and it's Pygame module are used for creating the game.
 
 ## Instructions
 ---
-* Control the player pad with mouse, soon WASD support will be added.
+* Control the player with mouse, WASD is also support.
 * Press Spacebar or LMB to start the game. Should this be mentioned first?
+* If you loose all the lives, game over screen will show, press spacebar or return/enter to start a new game.
 
 ## Future Plans
 ---

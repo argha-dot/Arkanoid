@@ -61,15 +61,16 @@ win = pygame.display.set_mode((win_wt, win_ht))
 # Player class
 class Player(object):
     def __init__(self, vel):
-        self.width  = 60
-        self.height = 10
-        self.x      = (win_wt//2) - (self.width//2)
-        self.y      = win_ht - 50
-        self.vel    = vel
-        self.move   = False
-        self.color = pygame.Color("#c80000")
+        self.width      = 60
+        self.height     = 10
+        self.x          = (win_wt//2) - (self.width//2)
+        self.y          = win_ht - 50
+        self.vel        = vel
+        self.move       = False
+        self.color      = pygame.Color("#c80000")
         self.max_lives  = 3                               # Initial Lives when starting the game
-        self.lives = self.max_lives
+        self.lives      = self.max_lives
+        self.score = 0
 
     def update(self):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
@@ -260,6 +261,7 @@ def collision(player, ball, level):
         if ball.rect.colliderect(brick.rect):
             ball.hit = True
             ball.timer = ball.time
+            player.score += 10
             if ball.up and (not ball.down):
                 if (ball.rect.top <= brick.rect.bottom <= ball.rect.top + ball.vel):
                     ball.up = False; ball.down = True
@@ -290,6 +292,7 @@ def collision(player, ball, level):
     for i, drop in sorted(enumerate(level.drop_s), reverse=True):
         if player.rect.colliderect(drop.rect) and drop.move:
             player.lives += 1
+            player.score += 50
             drop.move = False
             pygame.draw.rect(win, BLACK, drop.rect)
             level.drop_s.pop(i)
@@ -316,6 +319,7 @@ def collision(player, ball, level):
 
     if ball.y > win_ht + 6:
         delay(5)
+        player.score -= 100
         player.lives -= 1
         reset(ball, player)
 
@@ -328,7 +332,7 @@ def main():
 
             pass
 
-    def game_over():
+    def game_over(score):
         
         while True:
             for event in pygame.event.get():
@@ -342,9 +346,15 @@ def main():
             win.fill((0, 0, 0))
 
             text_font = pygame.font.SysFont("comicsans", 45)
+
             text = text_font.render("Game Over", True, (50, 50, 50))
+            score_text = text_font.render(f"{score}", True, (50, 50, 50))
+            
             text_rect = text.get_rect()
+            score_rect = score_text.get_rect()
+            
             win.blit(text, (win_wt//2 - text_rect.width//2, 100))
+            win.blit(score_text, (win_wt//2 - score_rect.width//2, 200))
 
             pygame.display.update()
 
@@ -387,10 +397,15 @@ def main():
             ball.update(player, dt)
             collision(player, ball, level)
 
+            score_font = pygame.font.SysFont("comicsans", 25)
+            score = score_font.render(f"{player.score}", True, (150, 150, 150))
+            score_rect = score.get_rect()
+            win.blit(score, (win_wt - score_rect.width, 0))
+
             if player.lives < 0:
                 pygame.display.update()
                 delay(10)
-                game_over()
+                game_over(player.score)
                 return
                 
             if ball.timer > 0:

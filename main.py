@@ -1,6 +1,7 @@
 import sys
 import os
 import pickle
+import copy
 from time import time
 from random import choices, randrange
 
@@ -21,6 +22,7 @@ def out_events():
         if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
             terminate()
 
+
 # Loads image
 def load_img(name):
     try:
@@ -29,6 +31,7 @@ def load_img(name):
         print("Can't load image:", name)
         raise SystemExit(e)
     return image
+
 
 # Delay Script
 def delay(j):
@@ -41,6 +44,7 @@ def delay(j):
                     (event.type == KEYDOWN and event.key == K_ESCAPE):
                 i = j + 1
                 terminate()
+
 
 # Full pathname
 def fullname(name):
@@ -127,14 +131,25 @@ class Brick(object):
         self.height = 25
         self.x      = x
         self.y      = y
-        self.color  = color
+        self.color  = copy.deepcopy(color)
+        self.move = False
         self.rect   = pygame.Rect(self.x, self.y, self.width, self.height)
 
     def __str__(self):
         return f"{self.x} {self.y}"
 
-    def update(self):
+    def update(self, dt):
         pygame.draw.rect(win, self.color, self.rect)
+        if self.move:
+            pygame.draw.rect(win, self.color, self.rect)
+            for x in range(len(self.color)):
+                if self.color[x] > 3:
+                    self.color[x] -= 3
+                else:
+                    self.color[x] = 0
+            self.y += 3*dt
+        self.rect = pygame.Rect(self.x, int(self.y), self.width, self.height)
+
 
 
 # Drop item class
@@ -143,7 +158,7 @@ class Drop(object):
         self.width  = 50
         self.height = 25
         self.type   = choices(["H"])[0]                     
-        self.color  = (0, 0, randrange(100, 200))           
+        self.color  = [0, 0, randrange(100, 200)]           
         self.x      = x
         self.y      = y
         self.vel    = 1.75
@@ -176,8 +191,8 @@ class Level(object):
         descriptive_var_name = self.stages()
         
         for line in range(len(descriptive_var_name)):
-            color = (randrange(100, 200), randrange(100, 200),  
-		     randrange(100, 200))
+            color = [randrange(50, 200), randrange(50, 200),  
+             randrange(50, 200), 255]
             
             for brick in range(len(descriptive_var_name[line])):
                 if descriptive_var_name[line][brick] == 1:
@@ -189,7 +204,7 @@ class Level(object):
 
     def update(self, dt):
         for brick in self.level:
-            brick.update()
+            brick.update(dt)
 
         for i in range(len(self.drop_s)):
             self.drop_s[i].update(dt)
@@ -280,9 +295,8 @@ def collision(player, ball, level):
                     else:
                         ball.right = False; ball.left = True
         
-        if ball.rect.colliderect(brick.rect):            
-            pygame.draw.rect(win, BLACK, brick.rect)
-            level.level.pop(i)
+        # if ball.rect.colliderect(brick.rect):     
+            brick.move = True
 
         
     for i, drop in sorted(enumerate(level.drop_s), reverse=True):
@@ -329,8 +343,10 @@ def main():
     def start_screen():
 
         while True:
-
+            
             pass
+
+        win.fill((0, 0, 0))
 
     def game_over(score):
         
@@ -345,15 +361,15 @@ def main():
             
             win.fill((0, 0, 0))
 
-            text_font = pygame.font.SysFont("comicsans", 45)
+            text_font  = pygame.font.SysFont("comicsans", 45)
 
-            text = text_font.render("Game Over", True, (50, 50, 50))
+            text       = text_font.render("Game Over", True, (50, 50, 50))
             score_text = text_font.render(f"{score}", True, (50, 50, 50))
             
-            text_rect = text.get_rect()
+            text_rect  = text.get_rect()
             score_rect = score_text.get_rect()
             
-            win.blit(text, (win_wt//2 - text_rect.width//2, 100))
+            win.blit(text,       (win_wt//2 -  text_rect.width//2, 100))
             win.blit(score_text, (win_wt//2 - score_rect.width//2, 200))
 
             pygame.display.update()
@@ -367,6 +383,8 @@ def main():
         level.make_level()
 
         last_time = time()
+
+        print(len(level.level))
 
         while True:
             dt = time() - last_time
@@ -398,7 +416,7 @@ def main():
             collision(player, ball, level)
 
             score_font = pygame.font.SysFont("comicsans", 25)
-            score = score_font.render(f"{player.score}", True, (150, 150, 150))
+            score      = score_font.render(f"{player.score}", True, (150, 150, 150))
             score_rect = score.get_rect()
             win.blit(score, (win_wt - score_rect.width, 0))
 
@@ -417,6 +435,10 @@ def main():
             else:
                 ball.color = pygame.Color("#c80000")
                 ball.radius = 6
+
+            for i, brick in sorted(enumerate(level.level), reverse=True):
+                if brick.color[0] == 0:
+                    level.level.pop(i)
 
             pygame.display.update()
             fps_clock.tick(fps)

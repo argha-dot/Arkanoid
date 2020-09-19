@@ -24,6 +24,23 @@ Python and it's Pygame module are used for creating the game.
 ## Future Plans
 ---
 * Add as much as I can from [this](https://www.youtube.com/watch?v=Fy0aCDmgnxg) video.
+    * ~~Colors~~
+    * Tweening in the beginning (bricks fall into place)
+    * Effects when ball hits something :
+        * ~~Ball changes color when hit.~~
+        * ~~Ball changes size when hit.~~
+        * Background color change.
+        * Sides bounce when ball bounces off of it.
+
+    * Sound
+    * Particles :
+        * Smoke when ball hits something.
+        * ~~Bricks fall away when hit.~~
+        * Paddle particles
+        * Ball trail
+    * Screen Shake
+    * Maybe let's not add eyes and the smiles to everything.
+
 
 ## Final Thoughts
 ---

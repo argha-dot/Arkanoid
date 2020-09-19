@@ -131,6 +131,7 @@ class Brick(object):
         self.height = 25
         self.x      = x
         self.y      = y
+        self.timer = 3
         self.color  = copy.deepcopy(color)
         self.move = False
         self.rect   = pygame.Rect(self.x, self.y, self.width, self.height)
@@ -139,17 +140,15 @@ class Brick(object):
         return f"{self.x} {self.y}"
 
     def update(self, dt):
-        pygame.draw.rect(win, self.color, self.rect)
+        pygame.draw.rect(win, self.color, [self.x, int(self.y), self.width, self.height])
         if self.move:
             pygame.draw.rect(win, self.color, self.rect)
             for x in range(len(self.color)):
-                if self.color[x] > 3:
-                    self.color[x] -= 3
+                if self.color[x] > self.timer:
+                    self.color[x] -= self.timer
                 else:
                     self.color[x] = 0
-            self.y += 3*dt
-        self.rect = pygame.Rect(self.x, int(self.y), self.width, self.height)
-
+            self.y += self.timer*dt
 
 
 # Drop item class
@@ -295,8 +294,8 @@ def collision(player, ball, level):
                     else:
                         ball.right = False; ball.left = True
         
-        # if ball.rect.colliderect(brick.rect):     
             brick.move = True
+            brick.rect = pygame.Rect(0 - brick.width, 0 - brick.height, brick.width, brick.height)
 
         
     for i, drop in sorted(enumerate(level.drop_s), reverse=True):

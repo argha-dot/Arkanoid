@@ -1,9 +1,8 @@
 import sys
 import os
-import pickle
 import copy
-from time import time
-from random import choices, randrange
+import time
+import random
 
 import pygame
 from pygame.locals import *
@@ -52,13 +51,16 @@ def fullname(name):
 
 # ==========================================================================================
 
+pygame.init()
+pygame.mouse.set_visible(False)   # Sets mouse visibility
+
 win_wt, win_ht = 700, 700
 BLACK = pygame.Color("#000000")
+bg = BLACK
 
 fps = 300
 fps_clock = pygame.time.Clock()
-pygame.init()
-pygame.mouse.set_visible(False)   # Sets mouse visibility
+
 win = pygame.display.set_mode((win_wt, win_ht))
 
 
@@ -89,6 +91,7 @@ class Player(object):
                 self.y = pos[1]
                 pygame.mouse.set_pos(self.x, self.y)
 
+            # WASD Controls
             keys = pygame.key.get_pressed()           
             if keys[K_a] and self.x > 10:
                 self.x -= self.vel
@@ -120,6 +123,7 @@ class Player(object):
                 self.x += self.vel
                 pygame.mouse.set_pos(self.x, self.y)
 
+        # Lives visibility
         for i in range(self.lives):     
             pygame.draw.rect(win, (200, 0, 0), [0 + 15*i, 0, 10, 10])
 
@@ -148,6 +152,13 @@ class Brick(object):
                     self.color[x] -= self.timer
                 else:
                     self.color[x] = 0
+            
+            if self.width > self.timer:
+                self.width -= self.timer//2
+
+            else:
+                self.width = 0
+
             self.y += self.timer*dt
 
 
@@ -156,8 +167,8 @@ class Drop(object):
     def __init__(self, x, y):
         self.width  = 50
         self.height = 25
-        self.type   = choices(["H"])[0]                     
-        self.color  = [0, 0, randrange(100, 200)]           
+        self.type   = random.choices(["H"])[0]                     
+        self.color  = [0, 0, random.randrange(100, 200)]           
         self.x      = x
         self.y      = y
         self.vel    = 1.75
@@ -166,7 +177,7 @@ class Drop(object):
         
     def update(self, dt):
         if self.move:
-            pygame.draw.rect(win, self.color, [self.rect.x, self.rect.y, self.rect.width - 5, self.rect.height - 5])
+            pygame.draw.rect(win, self.color, [self.rect.x, self.rect.y, self.rect.width, self.rect.height])
             self.y += self.vel*dt
         self.rect = pygame.Rect(self.x, int(self.y), self.width, self.height)
 
@@ -181,7 +192,7 @@ class Level(object):
     def stages(self):
         arr = []
         for i in range(0, 7):
-            some = [choices([0, 1])[0] for _ in range(5)]
+            some = [random.choices([0, 1])[0] for _ in range(5)]
             some = some + some[::-1]
             arr.append(some)
        	return arr
@@ -190,15 +201,15 @@ class Level(object):
         descriptive_var_name = self.stages()
         
         for line in range(len(descriptive_var_name)):
-            color = [randrange(50, 200), randrange(50, 200),  
-             randrange(50, 200), 255]
+            color = [random.randrange(50, 200), random.randrange(50, 200),  
+                    random.randrange(50, 200)]
             
             for brick in range(len(descriptive_var_name[line])):
                 if descriptive_var_name[line][brick] == 1:
                     self.level.append(Brick(100 + 52 * brick, 50 + 27 * line,
 		                            color))    
     
-        self.drops = choices(self.level, k=randrange(2, 5))
+        self.drops = random.choices(self.level, k=random.randrange(2, 5))
         self.drop_s = [Drop(x.x, x.y) for x in self.drops]
 
     def update(self, dt):
@@ -211,7 +222,7 @@ class Level(object):
 
 class Ball(object):
     def __init__(self, vel):
-        self.vel    = vel 
+        self.vel    = vel
         self.radius = 6
         self.x      = win_wt//2 - self.radius
         self.y      = win_ht//8 * 7
@@ -381,14 +392,12 @@ def main():
         level  = Level()
         level.make_level()
 
-        last_time = time()
-
-        print(len(level.level))
+        last_time = time.time()
 
         while True:
-            dt = time() - last_time
+            dt = time.time() - last_time
             dt *= 120
-            last_time = time()
+            last_time = time.time()
 
             for event in pygame.event.get():
                 if event.type == QUIT:
@@ -407,27 +416,31 @@ def main():
                    (event.type == KEYDOWN and event.key == K_SPACE):
                     reset(ball, player)
 
-            win.fill(BLACK)
+            win.fill(bg)
 
             player.update()
             level.update(dt)
             ball.update(player, dt)
             collision(player, ball, level)
 
+            # Render Score
             score_font = pygame.font.SysFont("comicsans", 25)
             score      = score_font.render(f"{player.score}", True, (150, 150, 150))
             score_rect = score.get_rect()
             win.blit(score, (win_wt - score_rect.width, 0))
 
+            # Game Over if life reaches -1 value
             if player.lives < 0:
                 pygame.display.update()
                 delay(10)
                 game_over(player.score)
                 return
-                
+            
+            # Color change, if timer is active
             if ball.timer > 0:
                 ball.timer -= 1
 
+            # If timer is active change color and increase the radius
             if ball.timer:
                 ball.color = pygame.Color("#c86464")
                 ball.radius = 10
@@ -436,12 +449,11 @@ def main():
                 ball.radius = 6
 
             for i, brick in sorted(enumerate(level.level), reverse=True):
-                if brick.color[0] == 0:
+                if brick.width == 0:
                     level.level.pop(i)
 
             pygame.display.update()
             fps_clock.tick(fps)
-
 
     while True:
         # game_over()

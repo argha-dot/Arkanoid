@@ -1,4 +1,4 @@
-# PyBlock Breaker
+# Arkanoid
 ---
 A simple breakout clone.
 
